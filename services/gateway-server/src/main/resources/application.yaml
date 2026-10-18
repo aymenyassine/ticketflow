@@ -6,13 +6,18 @@ spring:
     gateway:
       server:
         webflux:
-          routes:
-            - id: customer-service
-              uri: ${customer-service.url:http://localhost:8081}
-              predicates:
-                - Path=/api/customers/**
-              filters:
-                - AddResponseHeader=X-Served-By, api-gateway
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+#          routes:
+#            - id: customer-service
+#              uri: lb://CUSTOMER-SERVICE
+#              predicates:
+#                - Path=/api/customers/**
+#              filters:
+#                - AddResponseHeader=X-Served-By, api-gateway
+
 
 server:
   port: 8080

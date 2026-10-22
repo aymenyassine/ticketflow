@@ -26,10 +26,10 @@ bookings, unreliable payment providers, and asynchronous notifications.
 | Module | Role | Key technology | Status |
 |---|---|---|---|
 | `customer-service` | Customer profiles (CRUD) | Spring Web, JPA | Done |
-| `api-gateway` | Single entry point, routing, rate limiting | Spring Cloud Gateway | Done |
+| `gateway-server` (`api-gateway` in Eureka) | Single entry point and routing | Spring Cloud Gateway | Done |
 | `discovery-server` | Service registry | Eureka | Done |
 | `event-service` | Events and seats catalog | Spring Web, JPA | Planned |
-| `config-server` | Centralized configuration | Spring Cloud Config | Planned |
+| `conf-server` (`config-server` application) | Centralized configuration | Spring Cloud Config | Done |
 | `booking-service` | Booking and seat locking | OpenFeign, Resilience4J | Planned |
 | `payment-service` | Simulated payment provider (random failures) | Resilience4J | Planned |
 | `notification-service` | Confirmation emails/SMS | Kafka consumer | Planned |
@@ -80,6 +80,33 @@ Prerequisites: JDK 21, Maven (or the included wrapper), Docker.
     git clone https://github.com/<your-user>/ticketflow.git
     cd ticketflow
     mvn clean verify
+
+## Centralized configuration
+
+Config Server reads the separate `ticketflow-config` Git repository on its
+`main` branch. It expects `application.yml`, `customer-service.yml`, and
+`api-gateway.yml` at the repository root. Publish configuration changes to
+GitHub before using the remote URI; unpushed local commits are not available
+to a remote Config Server.
+
+From the TicketFlow root, start the services in separate terminals, in this order:
+
+    export CONFIG_GIT_URI=https://github.com/aymenyassine/ticketflow-config.git
+    ./mvnw -pl services/conf-server spring-boot:run
+    ./mvnw -pl services/Discovery-server spring-boot:run
+    ./mvnw -pl services/customer-service spring-boot:run
+    ./mvnw -pl services/gateway-server spring-boot:run
+
+Config Server runs on 8888; the clients require it at startup. Check the
+configurations and the refreshable message with:
+
+    curl http://localhost:8888/customer-service/default/main
+    curl http://localhost:8888/api-gateway/default/main
+    curl http://localhost:8081/api/config/message
+
+After a change to `ticketflow.message` is committed and pushed, refresh the
+running customer instance with `curl -X POST http://localhost:8081/actuator/refresh`.
+Keep secrets out of the configuration repository.
 
 ## Who is this for?
 

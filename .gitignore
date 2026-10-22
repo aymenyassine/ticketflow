@@ -2,6 +2,9 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
 
+# Separate Git repository used by Config Server
+/config-repo/
+
 # IntelliJ
 .idea/
 *.iml

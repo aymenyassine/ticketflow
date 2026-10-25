@@ -28,7 +28,7 @@ bookings, unreliable payment providers, and asynchronous notifications.
 | `customer-service` | Customer profiles (CRUD) | Spring Web, JPA | Done |
 | `gateway-server` (`api-gateway` in Eureka) | Single entry point and routing | Spring Cloud Gateway | Done |
 | `discovery-server` | Service registry | Eureka | Done |
-| `event-service` | Events and seats catalog | Spring Web, JPA | Planned |
+| `event-service` | Events and seats catalog | Spring Web, JPA | Done |
 | `conf-server` (`config-server` application) | Centralized configuration | Spring Cloud Config | Done |
 | `booking-service` | Booking and seat locking | OpenFeign, Resilience4J | Planned |
 | `payment-service` | Simulated payment provider (random failures) | Resilience4J | Planned |

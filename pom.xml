@@ -28,6 +28,7 @@
         <module>services/gateway-server</module>
         <module>services/Discovery-server</module>
         <module>services/conf-server</module>
+        <module>services/event-service</module>
     </modules>
 
     <dependencyManagement>

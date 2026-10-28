@@ -29,6 +29,7 @@
         <module>services/Discovery-server</module>
         <module>services/conf-server</module>
         <module>services/event-service</module>
+        <module>services/booking-service</module>
     </modules>
 
     <dependencyManagement>

@@ -29,11 +29,14 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/api/v1/admin/events")
 public class EventAdminController {
     private final EventService service;
-    public EventAdminController(EventService service) { this.service = service; }
+
+    public EventAdminController(EventService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public Page<EventResponse> list(@RequestParam(defaultValue = "0") @Min(0) int page,
-                                    @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return service.listAdmin(page, size);
     }
 
@@ -44,31 +47,47 @@ public class EventAdminController {
                 .buildAndExpand(created.id()).toUri();
         return ResponseEntity.created(location).body(created);
     }
+
     @GetMapping("/{id}")
-    public EventResponse get(@PathVariable UUID id) { return service.getAdmin(id); }
+    public EventResponse get(@PathVariable UUID id) {
+        return service.getAdmin(id);
+    }
+
     @PutMapping("/{id}")
     public EventResponse update(@PathVariable UUID id, @Valid @RequestBody EventRequest request) {
         return service.update(id, request);
     }
+
     @PostMapping("/{id}/publish")
-    public EventResponse publish(@PathVariable UUID id) { return service.publish(id); }
+    public EventResponse publish(@PathVariable UUID id) {
+        return service.publish(id);
+    }
+
     @PostMapping("/{id}/close")
-    public EventResponse close(@PathVariable UUID id) { return service.close(id); }
+    public EventResponse close(@PathVariable UUID id) {
+        return service.close(id);
+    }
+
     @PostMapping("/{id}/archive")
-    public EventResponse archive(@PathVariable UUID id) { return service.archive(id); }
+    public EventResponse archive(@PathVariable UUID id) {
+        return service.archive(id);
+    }
+
     @PostMapping("/{id}/tiers")
     public ResponseEntity<TicketTierResponse> addTier(@PathVariable UUID id,
-                                                       @Valid @RequestBody TicketTierRequest request) {
+            @Valid @RequestBody TicketTierRequest request) {
         TicketTierResponse created = service.addTier(id, request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{tierId}")
                 .buildAndExpand(created.id()).toUri();
         return ResponseEntity.created(location).body(created);
     }
+
     @PutMapping("/{id}/tiers/{tierId}")
     public TicketTierResponse updateTier(@PathVariable UUID id, @PathVariable UUID tierId,
-                                         @Valid @RequestBody TicketTierRequest request) {
+            @Valid @RequestBody TicketTierRequest request) {
         return service.updateTier(id, tierId, request);
     }
+
     @DeleteMapping("/{id}/tiers/{tierId}")
     public ResponseEntity<Void> deleteTier(@PathVariable UUID id, @PathVariable UUID tierId) {
         service.deleteTier(id, tierId);

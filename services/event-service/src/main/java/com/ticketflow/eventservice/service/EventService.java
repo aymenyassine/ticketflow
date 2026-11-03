@@ -48,6 +48,7 @@ public class EventService {
         return VenueResponse.from(venues.save(new Venue(request.name().trim(), request.city().trim(),
                 request.address().trim(), request.capacity())));
     }
+
     public VenueResponse updateVenue(UUID id, VenueRequest request) {
         Venue venue = venue(id);
         for (Event event : events.findByVenueId(id)) {
@@ -59,15 +60,19 @@ public class EventService {
         venue.update(request.name().trim(), request.city().trim(), request.address().trim(), request.capacity());
         return VenueResponse.from(venue);
     }
+
     @Transactional(readOnly = true)
     public List<VenueResponse> listVenues() {
         return venues.findAll(Sort.by("name")).stream().map(VenueResponse::from).toList();
     }
+
     public CategoryResponse createCategory(CategoryRequest request) {
         String name = request.name().trim();
-        if (categories.existsByNameIgnoreCase(name)) throw new BusinessRuleException("Category already exists");
+        if (categories.existsByNameIgnoreCase(name))
+            throw new BusinessRuleException("Category already exists");
         return CategoryResponse.from(categories.save(new Category(name)));
     }
+
     public CategoryResponse updateCategory(UUID id, CategoryRequest request) {
         Category category = category(id);
         String name = request.name().trim();
@@ -76,10 +81,12 @@ public class EventService {
         category.update(name);
         return CategoryResponse.from(category);
     }
+
     @Transactional(readOnly = true)
     public List<CategoryResponse> listCategories() {
         return categories.findAll(Sort.by("name")).stream().map(CategoryResponse::from).toList();
     }
+
     public EventResponse create(EventRequest request) {
         validateDates(request);
         Event event = events.save(new Event(request.title().trim(), request.summary().trim(),
@@ -87,6 +94,7 @@ public class EventService {
                 request.organizerId().trim(), venue(request.venueId()), category(request.categoryId())));
         return response(event);
     }
+
     public EventResponse update(UUID id, EventRequest request) {
         Event event = event(id);
         requireStatus(event, EventStatus.DRAFT);
@@ -97,6 +105,7 @@ public class EventService {
         checkCapacity(event, null, 0);
         return response(event);
     }
+
     public TicketTierResponse addTier(UUID eventId, TicketTierRequest request) {
         Event event = event(eventId);
         requireStatus(event, EventStatus.DRAFT);
@@ -104,6 +113,7 @@ public class EventService {
         return TicketTierResponse.from(tiers.save(new TicketTier(event, request.name().trim(),
                 request.price(), request.capacity())));
     }
+
     public TicketTierResponse updateTier(UUID eventId, UUID tierId, TicketTierRequest request) {
         Event event = event(eventId);
         requireStatus(event, EventStatus.DRAFT);
@@ -112,6 +122,7 @@ public class EventService {
         tier.update(request.name().trim(), request.price(), request.capacity());
         return TicketTierResponse.from(tier);
     }
+
     public void deleteTier(UUID eventId, UUID tierId) {
         Event event = event(eventId);
         requireStatus(event, EventStatus.DRAFT);
@@ -120,22 +131,27 @@ public class EventService {
             throw new BusinessRuleException("Tier has reserved seats");
         tiers.delete(tier);
     }
+
     public EventResponse publish(UUID id) {
         Event event = event(id);
         requireStatus(event, EventStatus.DRAFT);
         List<TicketTier> eventTiers = tiers.findByEventIdOrderByPriceAsc(id);
-        if (eventTiers.isEmpty()) throw new BusinessRuleException("At least one ticket tier is required");
-        if (!event.getStartsAt().isAfter(Instant.now())) throw new BusinessRuleException("Start date must be in the future");
+        if (eventTiers.isEmpty())
+            throw new BusinessRuleException("At least one ticket tier is required");
+        if (!event.getStartsAt().isAfter(Instant.now()))
+            throw new BusinessRuleException("Start date must be in the future");
         checkCapacity(event, null, 0);
         event.setStatus(EventStatus.PUBLISHED);
         return response(event);
     }
+
     public EventResponse close(UUID id) {
         Event event = event(id);
         requireStatus(event, EventStatus.PUBLISHED);
         event.setStatus(EventStatus.CLOSED);
         return response(event);
     }
+
     public EventResponse archive(UUID id) {
         Event event = event(id);
         if (event.getStatus() != EventStatus.CLOSED && event.getStatus() != EventStatus.DRAFT)
@@ -143,22 +159,29 @@ public class EventService {
         event.setStatus(EventStatus.ARCHIVED);
         return response(event);
     }
+
     @Transactional(readOnly = true)
     public EventResponse getPublic(UUID id) {
         Event event = event(id);
-        if (event.getStatus() != EventStatus.PUBLISHED) throw new ResourceNotFoundException("Event", id);
+        if (event.getStatus() != EventStatus.PUBLISHED)
+            throw new ResourceNotFoundException("Event", id);
         return response(event);
     }
+
     @Transactional(readOnly = true)
-    public EventResponse getAdmin(UUID id) { return response(event(id)); }
+    public EventResponse getAdmin(UUID id) {
+        return response(event(id));
+    }
+
     @Transactional(readOnly = true)
     public Page<EventResponse> listAdmin(int page, int size) {
         return events.findAll(PageRequest.of(page, size, Sort.by("startsAt"))).map(this::response);
     }
+
     @Transactional(readOnly = true)
     public Page<EventResponse> search(String query, String city, UUID categoryId,
-                                      Instant fromDate, Instant toDate,
-                                      BigDecimal minPrice, BigDecimal maxPrice, int page, int size) {
+            Instant fromDate, Instant toDate,
+            BigDecimal minPrice, BigDecimal maxPrice, int page, int size) {
         if (fromDate != null && toDate != null && !toDate.isAfter(fromDate))
             throw new IllegalArgumentException("toDate must be after fromDate");
         if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0)
@@ -168,40 +191,50 @@ public class EventService {
                 PageRequest.of(page, size, Sort.by("startsAt")))
                 .map(this::response);
     }
+
     private EventResponse response(Event event) {
         return EventResponse.from(event, tiers.findByEventIdOrderByPriceAsc(event.getId()).stream()
                 .map(TicketTierResponse::from).toList());
     }
+
     private void checkCapacity(Event event, UUID excludedTier, int newCapacity) {
         int sum = tiers.findByEventIdOrderByPriceAsc(event.getId()).stream()
                 .filter(t -> !t.getId().equals(excludedTier)).mapToInt(TicketTier::getCapacity).sum();
         if ((long) sum + newCapacity > event.getVenue().getCapacity())
             throw new BusinessRuleException("Ticket capacity exceeds venue capacity");
     }
+
     private void validateDates(EventRequest request) {
         if (!request.endsAt().isAfter(request.startsAt()))
             throw new BusinessRuleException("End date must be after start date");
     }
+
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
+
     private void requireStatus(Event event, EventStatus expected) {
         if (event.getStatus() != expected)
             throw new BusinessRuleException("Event must be " + expected);
     }
+
     private Event event(UUID id) {
         return events.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event", id));
     }
+
     private Venue venue(UUID id) {
         return venues.findById(id).orElseThrow(() -> new ResourceNotFoundException("Venue", id));
     }
+
     private Category category(UUID id) {
         return categories.findById(id).orElseThrow(() -> new ResourceNotFoundException("Category", id));
     }
+
     private TicketTier tier(UUID eventId, UUID tierId) {
         TicketTier tier = tiers.findById(tierId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket tier", tierId));
-        if (!tier.getEvent().getId().equals(eventId)) throw new ResourceNotFoundException("Ticket tier", tierId);
+        if (!tier.getEvent().getId().equals(eventId))
+            throw new ResourceNotFoundException("Ticket tier", tierId);
         return tier;
     }
 }

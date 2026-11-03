@@ -20,10 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class InventoryService {
     private final InventoryHoldRepo holds;
     private final TicketTierRepo tiers;
+
     public InventoryService(InventoryHoldRepo holds, TicketTierRepo tiers) {
         this.holds = holds;
         this.tiers = tiers;
     }
+
     public InventoryHoldResponse hold(UUID id, InventoryHoldRequest request) {
         InventoryHold existing = holds.findLocked(id).orElse(null);
         if (existing != null) {
@@ -40,22 +42,29 @@ public class InventoryService {
         TicketTier tier = lockedTier(request.tierId());
         if (tier.getEvent().getStatus() != EventStatus.PUBLISHED)
             throw new BusinessRuleException("Event is not published");
-        try { tier.reserve(request.quantity()); }
-        catch (IllegalArgumentException ex) { throw new BusinessRuleException(ex.getMessage()); }
+        try {
+            tier.reserve(request.quantity());
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessRuleException(ex.getMessage());
+        }
         return InventoryHoldResponse.from(holds.save(new InventoryHold(id, tier,
                 request.quantity(), request.expiresAt())));
     }
+
     public InventoryHoldResponse confirm(UUID id) {
         InventoryHold hold = get(id);
-        if (hold.getStatus() == InventoryHoldStatus.CONFIRMED) return InventoryHoldResponse.from(hold);
+        if (hold.getStatus() == InventoryHoldStatus.CONFIRMED)
+            return InventoryHoldResponse.from(hold);
         if (hold.getStatus() != InventoryHoldStatus.HELD || !hold.getExpiresAt().isAfter(Instant.now()))
             throw new BusinessRuleException("Hold is no longer active");
         hold.confirm();
         return InventoryHoldResponse.from(hold);
     }
+
     public InventoryHoldResponse release(UUID id) {
         InventoryHold hold = get(id);
-        if (hold.getStatus() == InventoryHoldStatus.RELEASED) return InventoryHoldResponse.from(hold);
+        if (hold.getStatus() == InventoryHoldStatus.RELEASED)
+            return InventoryHoldResponse.from(hold);
         if (hold.getStatus() != InventoryHoldStatus.HELD)
             throw new BusinessRuleException("Confirmed hold cannot be released");
         TicketTier tier = lockedTier(hold.getTier().getId());
@@ -63,6 +72,7 @@ public class InventoryService {
         hold.release();
         return InventoryHoldResponse.from(hold);
     }
+
     public int releaseExpired() {
         int released = 0;
         for (InventoryHold hold : holds.findByStatusAndExpiresAtBefore(InventoryHoldStatus.HELD, Instant.now())) {
@@ -71,9 +81,11 @@ public class InventoryService {
         }
         return released;
     }
+
     private InventoryHold get(UUID id) {
         return holds.findLocked(id).orElseThrow(() -> new ResourceNotFoundException("Hold", id));
     }
+
     private TicketTier lockedTier(UUID id) {
         return tiers.findLocked(id).orElseThrow(() -> new ResourceNotFoundException("Ticket tier", id));
     }

@@ -21,20 +21,26 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/events")
 public class EventController {
     private final EventService service;
-    public EventController(EventService service) { this.service = service; }
+
+    public EventController(EventService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public Page<EventResponse> search(@RequestParam(required = false) String query,
-                                      @RequestParam(required = false) String city,
-                                      @RequestParam(required = false) UUID categoryId,
-                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
-                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant toDate,
-                                      @RequestParam(required = false) @jakarta.validation.constraints.DecimalMin("0.00") BigDecimal minPrice,
-                                      @RequestParam(required = false) @jakarta.validation.constraints.DecimalMin("0.00") BigDecimal maxPrice,
-                                      @RequestParam(defaultValue = "0") @Min(0) int page,
-                                      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant toDate,
+            @RequestParam(required = false) @jakarta.validation.constraints.DecimalMin("0.00") BigDecimal minPrice,
+            @RequestParam(required = false) @jakarta.validation.constraints.DecimalMin("0.00") BigDecimal maxPrice,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return service.search(query, city, categoryId, fromDate, toDate, minPrice, maxPrice, page, size);
     }
+
     @GetMapping("/{id}")
-    public EventResponse get(@PathVariable UUID id) { return service.getPublic(id); }
+    public EventResponse get(@PathVariable UUID id) {
+        return service.getPublic(id);
+    }
 }

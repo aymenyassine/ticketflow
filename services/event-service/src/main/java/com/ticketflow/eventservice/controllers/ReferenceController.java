@@ -23,10 +23,16 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/api/v1")
 public class ReferenceController {
     private final EventService service;
-    public ReferenceController(EventService service) { this.service = service; }
+
+    public ReferenceController(EventService service) {
+        this.service = service;
+    }
 
     @GetMapping("/venues")
-    public List<VenueResponse> venues() { return service.listVenues(); }
+    public List<VenueResponse> venues() {
+        return service.listVenues();
+    }
+
     @PostMapping("/admin/venues")
     public ResponseEntity<VenueResponse> createVenue(@Valid @RequestBody VenueRequest request) {
         VenueResponse created = service.createVenue(request);
@@ -34,12 +40,17 @@ public class ReferenceController {
                 .buildAndExpand(created.id()).toUri();
         return ResponseEntity.created(location).body(created);
     }
+
     @PutMapping("/admin/venues/{id}")
     public VenueResponse updateVenue(@PathVariable UUID id, @Valid @RequestBody VenueRequest request) {
         return service.updateVenue(id, request);
     }
+
     @GetMapping("/categories")
-    public List<CategoryResponse> categories() { return service.listCategories(); }
+    public List<CategoryResponse> categories() {
+        return service.listCategories();
+    }
+
     @PostMapping("/admin/categories")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
         CategoryResponse created = service.createCategory(request);
@@ -47,6 +58,7 @@ public class ReferenceController {
                 .buildAndExpand(created.id()).toUri();
         return ResponseEntity.created(location).body(created);
     }
+
     @PutMapping("/admin/categories/{id}")
     public CategoryResponse updateCategory(@PathVariable UUID id, @Valid @RequestBody CategoryRequest request) {
         return service.updateCategory(id, request);

@@ -17,13 +17,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/internal/v1/inventory/holds")
 public class InventoryController {
     private final InventoryService service;
-    public InventoryController(InventoryService service) { this.service = service; }
+
+    public InventoryController(InventoryService service) {
+        this.service = service;
+    }
+
     @PutMapping("/{id}")
     public InventoryHoldResponse hold(@PathVariable UUID id, @Valid @RequestBody InventoryHoldRequest request) {
         return service.hold(id, request);
     }
+
     @PostMapping("/{id}/confirm")
-    public InventoryHoldResponse confirm(@PathVariable UUID id) { return service.confirm(id); }
+    public InventoryHoldResponse confirm(@PathVariable UUID id) {
+        return service.confirm(id);
+    }
+
     @DeleteMapping("/{id}")
-    public InventoryHoldResponse release(@PathVariable UUID id) { return service.release(id); }
+    public InventoryHoldResponse release(@PathVariable UUID id) {
+        return service.release(id);
+    }
 }

@@ -3,7 +3,7 @@
 Version simple et locale pour preparer le prochain TP.
 Structure : entities, repos, dto, service, controllers et exceptions.
 
-Le service enregistre les reservations et leurs lignes avec JPA/H2.
+Le service enregistre les reservations et leurs lignes avec JPA/MySQL (`booking_service`).
 Il permet la creation, la consultation, la confirmation manuelle, l'annulation et l'expiration apres 15 minutes.
 Il n'appelle ni Customer Service ni Event Service. Les identifiants fournis sont enregistres sans verification distante.
 Aucune place n'est retiree ou restituee dans Event Service.
@@ -32,7 +32,7 @@ Exemple de creation :
 ```
 
 Le total calcule est 200. La quantite doit etre comprise entre 1 et 10 et le prix doit etre positif ou nul.
-La base locale H2 est en memoire. Les donnees disparaissent au redemarrage.
+La base locale MySQL est persistante. Demarrer MySQL avec `docker compose -f infra/docker-compose.yml up -d mysql` ; la connexion par defaut utilise `localhost:3307`, utilisateur/mot de passe `ticketflow`. Les variables `DB_HOST`, `DB_PORT`, `DB_USERNAME` et `DB_PASSWORD` permettent de personnaliser la connexion.
 Config Server et Eureka restent configures comme dans les autres services.
 Le port local par defaut est 8084 ; la configuration centralisee peut le remplacer.
 

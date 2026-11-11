@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/bookings")
+@RequestMapping({"/api/v1/bookings", "/api/v1/bookings/"})
 public class BookingController {
     private final BookingService service;
 

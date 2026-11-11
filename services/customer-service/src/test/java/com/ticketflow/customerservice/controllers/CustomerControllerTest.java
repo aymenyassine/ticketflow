@@ -35,7 +35,7 @@ class CustomerControllerTest {
 
     @Test
     void createThenGetThenDelete() throws Exception {
-        String location = mockMvc.perform(post("/api/customers")
+        String location = mockMvc.perform(post("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body(uniqueEmail())))
                 .andExpect(status().isCreated())
@@ -55,7 +55,7 @@ class CustomerControllerTest {
 
     @Test
     void rejectsInvalidEmail() throws Exception {
-        mockMvc.perform(post("/api/customers")
+        mockMvc.perform(post("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body("not-an-email")))
                 .andExpect(status().isBadRequest());
@@ -64,12 +64,12 @@ class CustomerControllerTest {
     @Test
     void rejectsDuplicateEmail() throws Exception {
         String email = uniqueEmail();
-        mockMvc.perform(post("/api/customers")
+        mockMvc.perform(post("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body(email)))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/customers")
+        mockMvc.perform(post("/api/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body(email)))
                 .andExpect(status().isConflict());

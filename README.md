@@ -81,6 +81,16 @@ Prerequisites: JDK 21, Maven (or the included wrapper), Docker.
     cd ticketflow
     mvn clean verify
 
+## Run MySQL with Docker
+
+Only MySQL runs in Docker. The Spring services run locally and connect to it on
+`localhost:3307` (Docker maps host port 3307 to MySQL port 3306):
+
+    docker compose -f infra/docker-compose.yml up -d mysql
+
+The `customer_service`, `booking_service`, and `event_service` schemas are
+initialized automatically. MySQL data persists in the `mysql_data` volume.
+
 ## Centralized configuration
 
 Config Server reads the separate `ticketflow-config` Git repository on its

@@ -9,16 +9,16 @@ this service only manages the business profile.
 
 ## Overview
 - **Port:** 8081
-- **Database:** H2 in-memory (recreated on every start)
-- **Depends on:** nothing
+- **Database:** MySQL (`customer_service` schema)
+- **Depends on:** MySQL
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/customers` | Create a customer (201 + Location) |
-| GET | `/api/customers/{id}` | Get one customer |
-| GET | `/api/customers` | List customers |
-| PUT | `/api/customers/{id}` | Update a customer |
-| DELETE | `/api/customers/{id}` | Delete a customer |
+| POST | `/customer-service/api/v1/customers` | Create a customer (201 + Location) |
+| GET | `/customer-service/api/v1/customers/{id}` | Get one customer |
+| GET | `/customer-service/api/v1/customers` | List customers |
+| PUT | `/customer-service/api/v1/customers/{id}` | Update a customer |
+| DELETE | `/customer-service/api/v1/customers/{id}` | Delete a customer |
 
 Errors follow RFC 9457 (`ProblemDetail`): 400 validation, 404 not found, 409 duplicate email.
 
@@ -31,22 +31,25 @@ Errors follow RFC 9457 (`ProblemDetail`): 400 validation, 404 not found, 409 dup
     exceptions/    domain exceptions and their HTTP mapping
 
 ## Run locally
+Start MySQL with `docker compose -f infra/docker-compose.yml up -d mysql`, then:
+
     ./mvnw -pl services/customer-service spring-boot:run
 
-    curl -i -X POST localhost:8081/api/customers \
+The default connection is `localhost:3307` with user/password `ticketflow`.
+Override it with `DB_HOST`, `DB_PORT`, `DB_USERNAME`, and `DB_PASSWORD`.
+
+    curl -i -X POST localhost:8080/customer-service/api/v1/customers \
       -H 'Content-Type: application/json' \
       -d '{"firstName":"Sara","lastName":"Idrissi","email":"sara@example.com"}'
 
-## Run with Docker
-    docker compose -f infra/docker-compose.yml up --build customer-service
+The service runs locally; only its MySQL database runs in Docker. Start the
+database with `docker compose -f infra/docker-compose.yml up -d mysql`.
 
 ## Run the tests
     ./mvnw -pl services/customer-service test
 
 ## Exercise
-1. Add a `GET /api/customers?email=...` search endpoint with a test.
-2. Restart the service and list customers. Why is the list empty? What would
-   you change to keep the data?
+1. Add a `GET /api/v1/customers?email=...` search endpoint with a test.
 
 ## Common pitfalls
 - Exposing JPA entities directly in the API couples your contract to your

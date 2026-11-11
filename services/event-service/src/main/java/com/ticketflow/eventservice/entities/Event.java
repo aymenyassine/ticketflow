@@ -1,69 +1,56 @@
 package com.ticketflow.eventservice.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.ticketflow.eventservice.dto.EventRequest;
+import com.ticketflow.eventservice.exceptions.BusinessRuleException;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
+@Table(name = "simple_events")
 public class Event {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    @Column(nullable = false)
-    private String title;
-    @Column(nullable = false, length = 500)
-    private String summary;
-    @Column(nullable = false, length = 5000)
-    private String description;
-    @Column(nullable = false)
-    private Instant startsAt;
-    @Column(nullable = false)
-    private Instant endsAt;
-    @Column(nullable = false)
-    private String organizerId;
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private EventStatus status = EventStatus.DRAFT;
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "venue_id", nullable = false)
-    private Venue venue;
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @Column(nullable = false) private String title;
+    @Column(nullable = false, length = 2000) private String description;
+    @Column(nullable = false) private String venue;
+    @Column(nullable = false) private Instant startsAt;
+    @Column(nullable = false, precision = 19, scale = 2) private BigDecimal price;
+    @Column(nullable = false) private int capacity;
+    @Enumerated(EnumType.STRING) @Column(nullable = false) private EventStatus status = EventStatus.DRAFT;
+    @Column(nullable = false) private Instant createdAt = Instant.now();
 
     protected Event() {}
-    public Event(String title, String summary, String description, Instant startsAt,
-                 Instant endsAt, String organizerId, Venue venue, Category category) {
-        update(title, summary, description, startsAt, endsAt, organizerId, venue, category);
+    public Event(EventRequest request) { apply(request); }
+    public void update(EventRequest request) {
+        if (status != EventStatus.DRAFT) throw new BusinessRuleException("Only a draft event can be updated");
+        apply(request);
     }
-    public void update(String title, String summary, String description, Instant startsAt,
-                       Instant endsAt, String organizerId, Venue venue, Category category) {
-        this.title = title;
-        this.summary = summary;
-        this.description = description;
-        this.startsAt = startsAt;
-        this.endsAt = endsAt;
-        this.organizerId = organizerId;
-        this.venue = venue;
-        this.category = category;
+    private void apply(EventRequest request) {
+        title = request.title().trim();
+        description = request.description().trim();
+        venue = request.venue().trim();
+        startsAt = request.startsAt();
+        price = request.price();
+        capacity = request.capacity();
     }
-    public void setStatus(EventStatus status) { this.status = status; }
+    public void publish() {
+        if (status != EventStatus.DRAFT) throw new BusinessRuleException("Event must be DRAFT");
+        if (!startsAt.isAfter(Instant.now())) throw new BusinessRuleException("Event start must be in the future");
+        status = EventStatus.PUBLISHED;
+    }
+    public void close() {
+        if (status != EventStatus.PUBLISHED) throw new BusinessRuleException("Event must be PUBLISHED");
+        status = EventStatus.CLOSED;
+    }
     public UUID getId() { return id; }
     public String getTitle() { return title; }
-    public String getSummary() { return summary; }
     public String getDescription() { return description; }
+    public String getVenue() { return venue; }
     public Instant getStartsAt() { return startsAt; }
-    public Instant getEndsAt() { return endsAt; }
-    public String getOrganizerId() { return organizerId; }
+    public BigDecimal getPrice() { return price; }
+    public int getCapacity() { return capacity; }
     public EventStatus getStatus() { return status; }
-    public Venue getVenue() { return venue; }
-    public Category getCategory() { return category; }
+    public Instant getCreatedAt() { return createdAt; }
 }

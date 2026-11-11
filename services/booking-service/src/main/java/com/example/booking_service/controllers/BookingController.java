@@ -34,11 +34,6 @@ public class BookingController {
         return service.getByCustomer(customerId);
     }
 
-    @PostMapping("/{id}/confirm")
-    public BookingResponse confirm(@PathVariable UUID id) {
-        return service.confirm(id);
-    }
-
     @PostMapping("/{id}/cancel")
     public BookingResponse cancel(@PathVariable UUID id) {
         return service.cancel(id);

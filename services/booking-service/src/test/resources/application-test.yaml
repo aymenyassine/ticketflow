@@ -12,5 +12,3 @@ spring:
 eureka:
   client:
     enabled: false
-booking:
-  expiry-check-ms: 3600000

@@ -1,3 +1,3 @@
 package com.ticketflow.eventservice.entities;
 
-public enum EventStatus { DRAFT, PUBLISHED, CLOSED, ARCHIVED }
+public enum EventStatus { DRAFT, PUBLISHED, CLOSED }

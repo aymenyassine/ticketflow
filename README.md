@@ -137,3 +137,97 @@ To be defined (MIT recommended for an educational project).
 ## Author
 
 **AHAIDOUS Khadija**   | [GitHub](https://github.com/kahaidous>) · [LinkedIn](https://www.linkedin.com/in/khadijaahaidous)
+
+
+## Réalisation
+
+**Ticket TF-002 — Environnement Docker local**  
+**Responsable — Adam Zaghi**
+
+### Éléments ajoutés
+
+- Apache Kafka `4.1.2` en mode KRaft avec un broker local.
+- Deux adresses de connexion Kafka, `localhost:9092` depuis les applications Java locales et `kafka:29092` depuis le réseau Compose.
+- Keycloak `26.8.2` en mode développement, accessible sur `http://localhost:8180`.
+- Volumes persistants `kafka_data` et `keycloak_data`.
+- Healthchecks pour vérifier la disponibilité de Kafka et Keycloak.
+- Service `kafka-init` qui attribue les permissions du volume à l’utilisateur Kafka avant son démarrage.
+
+Les microservices Spring Boot sont lancés localement depuis IntelliJ.
+
+### Configuration locale
+
+Créer `infra/.env` à partir du fichier `infra/.env.example`, puis renseigner les paramètres suivants.
+
+```dotenv
+KC_ADMIN_USERNAME=admin
+KC_ADMIN_PASSWORD=choisir-un-mot-de-passe-local
+```
+
+Le fichier `.env` doit être exclu de Git. Le fichier `.env.example` fournit le modèle partagé avec l’équipe.
+
+### Démarrage et vérification
+
+Exécuter les commandes depuis la racine du projet.
+
+Vérifier la configuration Compose.
+
+```bash
+docker compose --env-file infra/.env -f infra/docker-compose.yml config --quiet
+```
+
+Démarrer Kafka et Keycloak.
+
+```bash
+docker compose --env-file infra/.env -f infra/docker-compose.yml up -d kafka keycloak
+```
+
+Afficher l’état des services, y compris le service d’initialisation.
+
+```bash
+docker compose --env-file infra/.env -f infra/docker-compose.yml ps -a
+```
+
+Les états attendus sont `Exited (0)` pour `kafka-init` et `healthy` pour Kafka et Keycloak.
+
+Consulter les logs.
+
+```bash
+docker compose --env-file infra/.env -f infra/docker-compose.yml logs --tail=100 kafka keycloak
+```
+
+Arrêter les deux composants.
+
+```bash
+docker compose --env-file infra/.env -f infra/docker-compose.yml stop kafka keycloak
+```
+
+Les volumes conservent les données après l’arrêt. La commande `down -v` supprime les volumes du projet et leurs données.
+
+### Incident rencontré et correction
+
+Kafka rencontrait une erreur `AccessDeniedException` lors de l’écriture dans `/tmp/kraft-combined-logs`. L’utilisateur du conteneur, identifié par UID/GID `1000:1000`, ne disposait pas des permissions nécessaires sur le volume.
+
+Le service `kafka-init` applique automatiquement la commande suivante avec les droits nécessaires.
+
+```bash
+chown -R 1000:1000 /tmp/kraft-combined-logs
+```
+
+Kafka attend la réussite de cette initialisation grâce à la condition `service_completed_successfully`.
+
+### Validation avant revue
+
+- [ ] Configuration Compose validée sans erreur.
+- [ ] Kafka démarre et devient `healthy`.
+- [ ] Un message de test est publié puis consommé.
+- [ ] Keycloak démarre et devient `healthy`.
+- [ ] Connexion à la console Keycloak réussie.
+- [ ] Données Kafka et Keycloak conservées après redémarrage.
+- [ ] `.env` ignoré par Git et `.env.example` disponible.
+- [ ] Configuration MySQL existante conservée dans le Compose partagé.
+- [ ] Procédure de démarrage reproduite par un autre membre.
+- [ ] Pull Request soumise à Ayman pour validation.
+
+**Lien de la Pull Request —** à compléter  
+**Résultats des tests et remarques —** à compléter
